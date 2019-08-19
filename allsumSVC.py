@@ -19,6 +19,6 @@ def svc_experiment(graph, features, labels, train_mask, test_mask, num_aggregate
     test_set, test_label = agg_features[test_mask==1], labels[test_mask==1]
     clf = LinearSVC(loss='hinge', C=100, max_iter=10000)
     clf.fit(train_set, train_label)
-    pre=clf.predict(test_set)
+    pre = clf.predict(test_set)
     f1 = f1_score(test_label, pre, average="micro")
     print('f1_micro', f1)
