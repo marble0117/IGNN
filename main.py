@@ -2,6 +2,7 @@ from dgl.data import citation_graph as citegrh
 
 from allsumSVC import *
 from allsumSLP import *
+from learnProp import *
 
 if __name__ == "__main__":
     # data = citegrh.load_cora()
@@ -13,5 +14,6 @@ if __name__ == "__main__":
     val_mask = np.array(data.val_mask, dtype=int)
     test_mask = np.array(data.test_mask, dtype=int)
 
-    svc_experiment(graph, features, labels, train_mask, test_mask, 3)
-    neural_experiment(graph, features, labels, train_mask, test_mask, 3)
+    # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
+    # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
+    learnProp_experiment(graph, features, labels, train_mask, test_mask)
