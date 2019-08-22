@@ -1,43 +1,63 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.nn import MessagePassing
+from torch_geometric.utils import add_self_loops
 
-class Net(nn.Module):
-    def __init__(self, nnode, nfeat, nclass):
-        super(Net, self).__init__()
-        self.P_mat = torch.randn(nnode, nnode)
+class Net(MessagePassing):
+    def __init__(self, edge_index, nfeat, nclass):
+        super(Net, self).__init__(aggr="mean")
+        self.edge_index = edge_index
+        self.edge1 = nn.Linear(nfeat, 16)
+        self.edge2 = nn.Linear(16, 1)
         self.fc1 = nn.Linear(nfeat, nclass)
+        self.relu = nn.ReLU(inplace=True)
+        self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x):
-        x = torch.t(x)
-        x = x.mm(self.P_mat).mm(self.P_mat)
-        x = torch.t(x)
+    def forward(self, x, edge_features):
+        # make a new (sparse) adjacency list
+        E = self.edge1(edge_features)
+        E = self.relu(E)
+        E = self.edge2(E)
+        E = self.sigmoid(E)
+        new_edges = self.edge_index[(E >= 0.5).repeat(1, 2).T]
+        # convolution
+        # have some trouble here
+        # https://github.com/rusty1s/pytorch_geometric is the reference of PyG
+        x = self.propagate(new_edges, size=(x.size(0), x.size(1)), x=x)
+        # prediction
         x = self.fc1(x)
         return F.log_softmax(x, dim=1)
+
+    def message(self, x_j):
+        return x_j
+
 
 def accuracy(pred, labels):
     _, indices = torch.max(pred, 1)
     correct = (indices == labels).sum().item()
     return correct / labels.size()[0]
 
-def learnProp_experiment(graph, features, labels, train_mask, test_mask):
-    train_set, train_label = features[train_mask == 1], labels[train_mask == 1]
-    test_set, test_label = features[test_mask == 1], labels[test_mask == 1]
+def learnProp_experiment(edge_index, features, labels, train_mask, test_mask):
+    # add self-loops and make edge features
+    edge_index = add_self_loops(edge_index)[0]
+    edge_features = features[edge_index[0]] + features[edge_index[1]]
 
-    allX = torch.from_numpy(features).type('torch.FloatTensor')
-    trainX, trainY = torch.from_numpy(train_set).type('torch.FloatTensor'), torch.from_numpy(train_label)
-    testX, testY = torch.from_numpy(test_set).type('torch.FloatTensor'), torch.from_numpy(test_label)
-    net = Net(graph.number_of_nodes() , features.shape[1], max(labels) + 1)
+    trainY = labels[train_mask == 1]
+    testY = labels[test_mask == 1]
+
+    net = Net(edge_index, features.shape[1], int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     for i in range(100):
         optimizer.zero_grad()
-        output = net(allX)
+        output = net(features, edge_features)
         loss = F.nll_loss(output[train_mask == 1], trainY)
+        print("epoch:", i+1, "loss:", loss.item())
         loss.backward()
         optimizer.step()
-    output = net(allX)
+    output = net(features, edge_features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
-    output = net(allX)
+    output = net(features, edge_features)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
