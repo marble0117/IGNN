@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,25 +22,29 @@ def accuracy(pred, labels):
 
 
 def neural_experiment(graph, features, labels, train_mask, test_mask, num_aggregate, neigs_list=None):
+    graph = np.array(graph).T
+    G = nx.Graph()
+    G.add_nodes_from(list(range(np.max(graph))))
+    G.add_edges_from(graph)
     if neigs_list == None:
         neigs_list = []
-        for i in list(graph):
-            neigs_list.append(np.array(list(graph.neighbors(i))))
+        for i in list(G):
+            neigs_list.append(np.array(list(G.neighbors(i)) + [i]))
 
     agg_features = features
+    trainY = labels[train_mask == 1]
+    testY  = labels[test_mask == 1]
     for exp_num in range(1, num_aggregate + 1):
         new_agg = []
-        for i in list(graph):
+        for i in list(G):
             neigs = neigs_list[i]
-            neigs_f = np.average(agg_features[neigs], axis=0)
+            neigs_f = torch.mean(agg_features[neigs], dim=0)
+            neigs_f = neigs_f.view(-1, neigs_f.shape[0])
             new_agg.append(neigs_f)
-        agg_features = np.array(new_agg)
-        train_set, train_label = agg_features[train_mask == 1], labels[train_mask == 1]
-        test_set, test_label = agg_features[test_mask == 1], labels[test_mask == 1]
-
-        trainX, trainY = torch.from_numpy(train_set).type('torch.FloatTensor'), torch.from_numpy(train_label)
-        testX, testY = torch.from_numpy(test_set).type('torch.FloatTensor'), torch.from_numpy(test_label)
-        net = Net(features.shape[1], max(labels)+1)
+        agg_features = torch.cat(new_agg)
+        trainX = agg_features[train_mask == 1]
+        testX = agg_features[test_mask == 1]
+        net = Net(features.shape[1], int(max(labels))+1)
         optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
         for i in range(500):
             optimizer.zero_grad()
