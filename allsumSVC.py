@@ -7,7 +7,7 @@ def svc_experiment(graph, features, labels, train_mask, test_mask, num_aggregate
     if neigs_list == None:
         neigs_list = []
         for i in list(graph):
-            neigs_list.append(np.array(list(graph.neighbors(i))))
+            neigs_list.append(np.array(list(graph.neighbors(i)) + [i]))
     agg_features = features
     for exp_num in range(1, num_aggregate + 1):
         new_agg = []
