@@ -9,8 +9,8 @@ from learnProp import *
 if __name__ == "__main__":
     # data = citegrh.load_cora()
     # data = citegrh.load_citeseer()
-    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
-    dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
+    dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
@@ -21,5 +21,5 @@ if __name__ == "__main__":
     test_mask = data.test_mask
 
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
-    neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    # learnProp_experiment(graph, features, labels, train_mask, test_mask)
+    # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
+    learnProp_experiment(graph, features, labels, train_mask, test_mask)
