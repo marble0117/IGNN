@@ -27,6 +27,7 @@ class Net(MessagePassing):
         new_edges = torch.cat((source.view(-1, source.size(0)), target.view(-1, source.size(0))), dim=0)
         # convolution
         x = self.propagate(new_edges, size=(x.size(0), x.size(0)), x=x)
+        x = self.propagate(new_edges, size=(x.size(0), x.size(0)), x=x)
         # prediction
         x = self.fc1(x)
         return F.log_softmax(x, dim=1)
@@ -53,6 +54,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, test_mask):
 
     net = Net(edge_index, nnode, features.shape[1], int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
+    net.train()
     for i in range(100):
         optimizer.zero_grad()
         output = net(features, edge_features)
@@ -60,6 +62,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, test_mask):
         print("epoch:", i+1, "loss:", loss.item())
         loss.backward()
         optimizer.step()
+    net.eval()
     output = net(features, edge_features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
