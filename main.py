@@ -22,4 +22,4 @@ if __name__ == "__main__":
 
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    learnProp_experiment(graph, features, labels, train_mask, test_mask)
+    learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask)
