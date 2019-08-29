@@ -1,6 +1,7 @@
 # pytorch
 torch
 torchvision
+pytorch-ignite
 
 # pytorch geometric
 torch-scatter
@@ -8,11 +9,6 @@ torch-sparse
 torch-cluster
 torch-spline-conv
 torch-geometric
-
-# torchsample
-tqdm
-nibabel
-torchsample
 
 # graph library
 dgl
