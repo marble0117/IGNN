@@ -9,8 +9,8 @@ from learnProp import *
 if __name__ == "__main__":
     # data = citegrh.load_cora()
     # data = citegrh.load_citeseer()
-    dataset = Planetoid(root='/tmp/Cora', name='Cora')
-    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
+    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
