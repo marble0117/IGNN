@@ -5,13 +5,14 @@ from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
 
+
 class Net(MessagePassing):
-    def __init__(self, edge_index, nfeat, nclass):
+    def __init__(self, edge_index, nefeat, nvfeat, nclass):
         super(Net, self).__init__()
         self.edge_index = edge_index
-        self.edge1 = nn.Linear(nfeat, 32)
-        self.edge2 = nn.Linear(32, 1)
-        self.fc1 = nn.Linear(nfeat, nclass)
+        self.edge1 = nn.Linear(nefeat, 16)
+        self.edge2 = nn.Linear(16, 1)
+        self.fc1 = nn.Linear(nvfeat, nclass)
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
         self.th = nn.Threshold(0.5, 0)
@@ -28,7 +29,7 @@ class Net(MessagePassing):
         print(torch.histc(E, bins=10, min=0, max=1.0))
         # convolution
         # E = torch.where(E > 0.5, self.ones, self.zeros)
-        # E = self.th(E)
+        E = self.th(E)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
 
@@ -45,25 +46,44 @@ def accuracy(pred, labels):
     correct = (indices == labels).sum().item()
     return correct / labels.size()[0]
 
-def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask):
+def similarity(edge_index, features, sim='sum'):
+    if sim == 'sum':
+        edge_features = features[edge_index[0]] + features[edge_index[1]]
+    elif sim == 'mul':
+        edge_features = features[edge_index[0]] * features[edge_index[1]]
+    elif sim == 'cat':
+        edge_features = torch.cat((features[edge_index[0]], features[edge_index[1]]), dim=1)
+    elif sim == 'l1':
+        edge_features = torch.abs(features[edge_index[0]] - features[edge_index[1]])
+    elif sim == 'l2':
+        edge_features = (features[edge_index[0]] - features[edge_index[1]]) ** 2
+    else:
+        print('invalid sim:', sim)
+        exit(-1)
+    return edge_features
+
+def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1):
     # add self-loops and make edge features
     edge_index = add_self_loops(edge_index)[0]
-    edge_features = features[edge_index[0]] + features[edge_index[1]]
+    edge_features = similarity(edge_index, features, 'sum')
+    print(edge_features.size())
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(edge_index, features.shape[1], int(max(labels)) + 1)
+    net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(40):
         optimizer.zero_grad()
         output = net(features, edge_features)
-        loss = F.nll_loss(output[train_mask == 1], trainY)
+        train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
-        print("epoch:", i+1, "training loss:", loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
+        print("epoch:", i + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
+        l1reg = torch.norm(net.fc1.weight, 1)
+        loss = train_loss + lam1 * l1reg
         loss.backward()
         optimizer.step()
     net.eval()
