@@ -12,3 +12,6 @@ torch-geometric
 
 # graph library
 dgl
+
+# drawing
+matplotlib
