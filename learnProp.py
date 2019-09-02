@@ -13,6 +13,7 @@ class Net(MessagePassing):
         self.edge1 = nn.Linear(nefeat, 16)
         self.edge2 = nn.Linear(16, 1)
         self.fc1 = nn.Linear(nvfeat, nclass)
+        self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
         self.th = nn.Threshold(0.5, 0)
@@ -23,19 +24,20 @@ class Net(MessagePassing):
         # make a new (sparse) adjacency list
         E = self.edge1(edge_features)
         E = self.relu(E)
+        E = self.dropout(E)
         E = self.edge2(E)
         E = self.sigmoid(E)
 
         print(torch.histc(E, bins=10, min=0, max=1.0))
         # convolution
         # E = torch.where(E > 0.5, self.ones, self.zeros)
-        E = self.th(E)
+        # E = self.th(E)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
 
         # prediction
         x = self.fc1(x)
-        return F.log_softmax(x, dim=1)
+        return F.log_softmax(x, dim=1), E
 
     def message(self, x_j, E):
         return x_j * E
@@ -77,7 +79,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
     net.train()
     for i in range(40):
         optimizer.zero_grad()
-        output = net(features, edge_features)
+        output, _ = net(features, edge_features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
@@ -87,9 +89,9 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
         loss.backward()
         optimizer.step()
     net.eval()
-    output = net(features, edge_features)
+    output, E = net(features, edge_features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
-    output = net(features, edge_features)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
+    return E
