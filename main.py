@@ -1,7 +1,6 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from dgl.data import citation_graph as citegrh
 from sklearn.manifold import TSNE
 from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
@@ -42,8 +41,6 @@ def draw_tsne(graph, E, labels):
     plt.show()
 
 if __name__ == "__main__":
-    # data = citegrh.load_cora()
-    # data = citegrh.load_citeseer()
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
@@ -61,6 +58,6 @@ if __name__ == "__main__":
     E = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1)
     # improvedGCN(graph, features, labels, train_mask, val_mask, test_mask)
 
-    # draw_nx(graph, labels)
-    draw_tsne(graph, E, labels)
+    draw_nx(graph, labels)
+    # draw_tsne(graph, E, labels)
 
