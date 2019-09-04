@@ -10,8 +10,8 @@ class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nclass):
         super(Net, self).__init__()
         self.edge_index = edge_index
-        self.edge1 = nn.Linear(nefeat, 16)
-        self.edge2 = nn.Linear(16, 1)
+        self.edge1 = nn.Linear(nefeat, 32)
+        self.edge2 = nn.Linear(32, 1)
         self.fc1 = nn.Linear(nvfeat, nclass)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
@@ -67,7 +67,7 @@ def similarity(edge_index, features, sim='sum'):
 def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1):
     # add self-loops and make edge features
     edge_index = add_self_loops(edge_index)[0]
-    edge_features = similarity(edge_index, features, 'sum')
+    edge_features = similarity(edge_index, features, 'cat')
     print(edge_features.size())
 
     trainY = labels[train_mask == 1]
@@ -77,7 +77,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
     net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
-    for i in range(40):
+    for i in range(20):
         optimizer.zero_grad()
         output, _ = net(features, edge_features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
