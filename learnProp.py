@@ -5,13 +5,12 @@ from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
 
-
 class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nclass):
         super(Net, self).__init__()
         self.edge_index = edge_index
-        self.edge1 = nn.Linear(nefeat, 32)
-        self.edge2 = nn.Linear(32, 1)
+        self.edge1 = nn.Linear(nefeat, 8)
+        self.edge2 = nn.Linear(8, 1)
         self.fc1 = nn.Linear(nvfeat, nclass)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
@@ -28,7 +27,6 @@ class Net(MessagePassing):
         E = self.edge2(E)
         E = self.sigmoid(E)
 
-        print(torch.histc(E, bins=10, min=0, max=1.0))
         # convolution
         # E = torch.where(E > 0.5, self.ones, self.zeros)
         # E = self.th(E)
@@ -64,10 +62,10 @@ def similarity(edge_index, features, sim='sum'):
         exit(-1)
     return edge_features
 
-def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1):
+def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim):
     # add self-loops and make edge features
     edge_index = add_self_loops(edge_index)[0]
-    edge_features = similarity(edge_index, features, 'cat')
+    edge_features = similarity(edge_index, features, sim)
     print(edge_features.size())
 
     trainY = labels[train_mask == 1]
@@ -77,10 +75,13 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
     net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
-    for i in range(20):
+    for i in range(30):
         optimizer.zero_grad()
         output, _ = net(features, edge_features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
+        # traval = torch.cat((output[train_mask == 1], output[val_mask == 1]), dim=0)
+        # travalY = torch.cat((trainY, valY))
+        # train_loss = F.nll_loss(traval, travalY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
         print("epoch:", i + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
