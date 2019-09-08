@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
+from utils import accuracy
 
 class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nclass):
@@ -39,12 +40,6 @@ class Net(MessagePassing):
 
     def message(self, x_j, E):
         return x_j * E
-
-
-def accuracy(pred, labels):
-    _, indices = torch.max(pred, 1)
-    correct = (indices == labels).sum().item()
-    return correct / labels.size()[0]
 
 def similarity(edge_index, features, sim='sum'):
     if sim == 'sum':

@@ -5,6 +5,7 @@ from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
 from learnProp import similarity
+from utils import accuracy
 
 class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nhid, nclass):
