@@ -9,6 +9,7 @@ from allsumSVC import *
 from allsumSLP import *
 from learnProp import *
 from improvedGCN import *
+from models import *
 
 def draw_nx(graph, E, labels):
     graph = add_self_loops(graph)[0]
@@ -39,8 +40,8 @@ def draw_nx(graph, E, labels):
     plt.show()
 
 if __name__ == "__main__":
-    dataset = Planetoid(root='/tmp/Cora', name='Cora')
-    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
+    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
@@ -53,7 +54,8 @@ if __name__ == "__main__":
 
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    E = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1)
+    # E = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1)
     # improvedGCN(graph, features, labels, train_mask, val_mask, test_mask)
+    runGCN(data)
 
-    draw_nx(graph, E, labels)
+    # draw_nx(graph, E, labels)
