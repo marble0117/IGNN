@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
+from torch_geometric.utils import add_self_loops
 
 from utils import accuracy
+from functions import *
 
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nclass):
@@ -14,8 +16,7 @@ class GCN(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, data):
-        x, edge_index = data.x, data.edge_index
+    def forward(self, x, edge_index):
         x = self.gc1(x, edge_index)
         x = self.relu(x)
         x = self.dropout(x)
@@ -23,11 +24,15 @@ class GCN(nn.Module):
         return F.log_softmax(x, dim=1)
 
 def runGCN(data):
+    edge_index = data.edge_index
     features = data.x
     labels = data.y
     train_mask = data.train_mask
     val_mask = data.val_mask
     test_mask = data.test_mask
+
+    edge_index = add_self_loops(edge_index)[0]
+    edge_index = eliminate_edges(edge_index, labels)
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
@@ -38,7 +43,7 @@ def runGCN(data):
     model.train()
     for epoch in range(100):
         optimizer.zero_grad()
-        output = model(data)
+        output = model(features, edge_index)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
@@ -47,9 +52,9 @@ def runGCN(data):
         loss.backward()
         optimizer.step()
     model.eval()
-    output = model(data)
+    output = model(features, edge_index)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
-    output = model(data)
+    output = model(features, edge_index)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
