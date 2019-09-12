@@ -28,8 +28,8 @@ class EdgeNet1(nn.Module):
 class EdgeNet2(nn.Module):
     def __init__(self, nfeat):
         super(EdgeNet2, self).__init__()
-        self.fc1 = nn.Linear(nfeat, 32)
-        self.fc2 = nn.Linear(32, 8)
+        self.fc1 = nn.Linear(nfeat, 16)
+        self.fc2 = nn.Linear(16, 8)
         self.fc3 = nn.Linear(16, 1)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
@@ -102,9 +102,7 @@ def similarity(edge_index, features, sim='sum'):
 
 def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim):
     # add self-loops and make edge features
-    edge_index = add_self_loops(edge_index)[0]
     edge_features = similarity(edge_index, features, sim)
-    print(edge_features.size())
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]

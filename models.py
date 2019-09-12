@@ -23,7 +23,7 @@ class GCN(nn.Module):
         x = self.gc2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
-def runGCN(data):
+def runGCN(data, verbose=True):
     edge_index = data.edge_index
     features = data.x
     labels = data.y
@@ -31,8 +31,9 @@ def runGCN(data):
     val_mask = data.val_mask
     test_mask = data.test_mask
 
-    edge_index = add_self_loops(edge_index)[0]
-    edge_index = eliminate_edges(edge_index, labels)
+    print(edge_index.size())
+
+    # edge_index = eliminate_interclass_edges(edge_index, labels)
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
@@ -47,7 +48,8 @@ def runGCN(data):
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
-        print("epoch:", epoch + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
+        if verbose:
+            print("epoch:", epoch + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
         loss = train_loss
         loss.backward()
         optimizer.step()
@@ -58,3 +60,4 @@ def runGCN(data):
     output = model(features, edge_index)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
+    return acc_test
