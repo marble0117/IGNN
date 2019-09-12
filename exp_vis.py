@@ -10,6 +10,8 @@ from allsumSLP import *
 from learnProp import *
 from improvedGCN import *
 from noprop import *
+from utils import *
+from models import *
 
 def draw_nx(graph, Elist, labels, train_mask):
     pos = None
@@ -55,23 +57,50 @@ def draw_nx(graph, Elist, labels, train_mask):
 
 if __name__ == "__main__":
     # dataset = Planetoid(root='/tmp/Cora', name='Cora')
-    dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
+    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
-    data = dataset[0]
-    features = data.x
-    labels = data.y
-    graph = data.edge_index
-    train_mask = data.train_mask
-    val_mask = data.val_mask
-    test_mask = data.test_mask
-    lam1 = 1e-3
+    datasets = [Planetoid(root='/tmp/Cora', name='Cora'),
+                Planetoid(root='/tmp/Citeseer', name='Citeseer'),
+                Planetoid(root='/tmp/Pubmed', name="Pubmed")]
+    acc_lists = []
+    for dataset in datasets:
+        data = dataset[0]
+        features = data.x
+        labels = data.y
+        edge_index = add_self_loops(data.edge_index)[0]
+        data.edge_index = edge_index
+        train_mask = data.train_mask
+        val_mask = data.val_mask
+        test_mask = data.test_mask
+        lam1 = 0
 
+        E_sum = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
+        E_mul = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
+        E_cat = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
+        E_l1  = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
 
-    E_sum = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
-    E_mul = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
-    E_cat = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-    E_l1  = learnProp_experiment(graph, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
+        Elist = [E_sum, E_mul, E_cat, E_l1]
 
-    Elist = [E_sum, E_mul, E_cat, E_l1, E_l2]
+        acc_list = []
+        for i, E in enumerate(Elist):
+            print("Eliminate important edges")
+            new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=True)
+            data.edge_index = new_edge_index
+            acc_test = 0
+            for _ in range(5):
+                acc_test += runGCN(data, verbose=False)
+            acc_list.append(acc_test / 5)
 
-    draw_nx(graph, Elist, labels, train_mask)
+            print("Eliminate not important edges")
+            new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=False)
+            data.edge_index = new_edge_index
+            acc_test = 0
+            for _ in range(5):
+                acc_test += runGCN(data, verbose=False)
+            acc_list.append(acc_test / 5)
+        acc_lists.append(acc_list)
+
+    names = ["Cora", "Citeseer", "pubmed"]
+    for i, acc_list in enumerate(acc_lists):
+        print(names[i])
+        print(acc_list)
