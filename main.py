@@ -11,6 +11,7 @@ from allsumSLP import *
 from learnProp import *
 from improvedGCN import *
 from models import *
+from utils import *
 
 
 def draw_nx(graph, E, labels):
@@ -65,6 +66,8 @@ if __name__ == "__main__":
     val_mask = data.val_mask
     test_mask = data.test_mask
     lam1 = 0
+
+    train_mask, val_mask, test_mask = devide_dataset(dataset, 20, 500, 1000)
 
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
