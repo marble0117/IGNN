@@ -1,6 +1,6 @@
 import torch
 
-def eliminate_edges(edge_index, labels):
+def eliminate_interclass_edges(edge_index, labels):
     source, target = edge_index
     same_lbl = labels[source] == labels[target]
     edge_index = edge_index.T
