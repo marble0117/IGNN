@@ -49,10 +49,30 @@ class EdgeCatNet(nn.Module):
 
 
 class EdgeConvNet(nn.Module):
-    def __init__(self):
+    def __init__(self, features, edge_index):
         super(EdgeConvNet, self).__init__()
-        self.conv1 = nn.Conv2d()
+        self.conv1 = nn.Conv2d(1, 8, (2, 1))
+        self.fc1 = nn.Linear(features.size(1), 16)
+        self.fc2 = nn.Linear(16, 1)
+        self.fc3 = nn.Linear(8, 1)
+        self.dropout = nn.Dropout(p=0.5)
+        self.relu = nn.ReLU(inplace=True)
+        self.sigmoid = nn.Sigmoid()
+        self.feat_ts = convert_feature_to_tensor(features, edge_index)
+
+    def forward(self, x):
+        feat = self.relu(self.conv1(self.feat_ts))
+        feat = self.relu(self.fc1(feat))
+        feat = self.relu(self.fc2(feat))
+        feat = torch.reshape(feat, (-1, 8))
+        feat = self.sigmoid(self.fc3(feat))
+        return feat
 
 
-    def forward(self):
-        pass
+def convert_feature_to_tensor(features, edge_index):
+    source, target = edge_index
+    f1, f2 = features[source], features[target]
+    f1 = torch.reshape(f1, (-1, 1, 1, f1.size(1)))
+    f2 = torch.reshape(f2, (-1, 1, 1, f2.size(1)))
+    feat_ts = torch.cat((f1, f2), dim=2)
+    return feat_ts
