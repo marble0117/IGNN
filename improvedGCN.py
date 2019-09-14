@@ -6,34 +6,25 @@ from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
 from learnProp import similarity
 from utils import accuracy
+from edge_processing import *
 
 class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nhid, nclass):
         super(Net, self).__init__()
         self.edge_index = edge_index
-        self.edge1 = nn.Linear(nefeat, 16)
-        self.edge2 = nn.Linear(16, 1)
+        self.edge_func = EdgeSimNet(nefeat)
         self.fc1 = nn.Linear(nvfeat, nhid)
         self.fc2 = nn.Linear(nhid, nclass)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
-        self.th = nn.Threshold(0.5, 0)
-        self.ones = torch.ones(edge_index.size()[1], 1)
-        self.zeros = torch.zeros(edge_index.size()[1], 1)
 
     def forward(self, x, edge_features):
         # make a new (sparse) adjacency list
-        E = self.edge1(edge_features)
-        E = self.relu(E)
-        E = self.dropout(E)
-        E = self.edge2(E)
-        E = self.sigmoid(E)
+        E = self.edge_func(edge_features)
 
         # convolution
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
+        x = self.dropout(self.relu(self.fc1(x)))
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
         x = self.fc2(x)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
@@ -51,10 +42,8 @@ def accuracy(pred, labels):
     return correct / labels.size()[0]
 
 
-def improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask):
-    # add self-loops and make edge features
-    edge_index = add_self_loops(edge_index)[0]
-    edge_features = similarity(edge_index, features, 'cat')
+def improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim):
+    edge_features = similarity(edge_index, features, sim)
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
