@@ -10,11 +10,12 @@ from utils import accuracy
 
 
 class Net(MessagePassing):
-    def __init__(self, edge_index, nefeat, nvfeat, nclass):
+    def __init__(self, edge_index, nefeat, nvfeat, nclass, features):
         super(Net, self).__init__()
         self.edge_index = edge_index
-        self.edge_func = EdgeSimNet(nefeat)
+        # self.edge_func = EdgeSimNet(nefeat)
         # self.edge_func = EdgeCatNet(nvfeat)
+        self.edge_func = EdgeConvNet(features, edge_index)
         self.fc1 = nn.Linear(nvfeat, nclass)
         self.th = nn.Threshold(0.5, 0)
         self.ones = torch.ones(edge_index.size()[1], 1)
@@ -64,7 +65,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1)
+    net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1, features)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(30):

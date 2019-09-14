@@ -55,8 +55,8 @@ def draw_nx(graph, E, labels):
 
 
 if __name__ == "__main__":
-    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
-    dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
+    dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
@@ -73,22 +73,22 @@ if __name__ == "__main__":
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
     E = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-    # improvedGCN(graph, features, labels, train_mask, val_mask, test_mask)
+    # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
 
     # runGCN(data, verbose=False)
 
-    print("Eliminate important edges")
-    new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=True)
-    data.edge_index = new_edge_index
-    for _ in range(5):
-        runGCN(data, verbose=False)
-
-    print("Eliminate not important edges")
-    new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=False)
-    data.edge_index = new_edge_index
-    for _ in range(5):
-        runGCN(data, verbose=False)
-
-    # draw_nx(graph, E, labels)
+    # print("Eliminate important edges")
+    # new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=True)
+    # data.edge_index = new_edge_index
+    # for _ in range(5):
+    #     runGCN(data, verbose=False)
+    #
+    # print("Eliminate not important edges")
+    # new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=False)
+    # data.edge_index = new_edge_index
+    # for _ in range(5):
+    #     runGCN(data, verbose=False)
+    #
+    # # draw_nx(graph, E, labels)
     plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
     plt.show()
