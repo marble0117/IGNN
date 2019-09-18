@@ -14,8 +14,8 @@ class Net(MessagePassing):
         super(Net, self).__init__()
         self.edge_index = edge_index
         # self.edge_func = EdgeSimNet(nefeat)
-        # self.edge_func = EdgeCatNet(nvfeat)
-        self.edge_func = EdgeConvNet(features, edge_index)
+        self.edge_func = EdgeCatNet(nvfeat)
+        # self.edge_func = EdgeConvNet(features, edge_index)
         self.fc1 = nn.Linear(nvfeat, nclass)
         self.th = nn.Threshold(0.5, 0)
         self.ones = torch.ones(edge_index.size()[1], 1)
@@ -23,12 +23,10 @@ class Net(MessagePassing):
 
     def forward(self, x, edge_features):
         # make a new (sparse) adjacency list
-        E = self.edge_func(edge_features)
-        # E = self.edge_func(x, self.edge_index)
+        # E = self.edge_func(edge_features)
+        E = self.edge_func(x, self.edge_index)
 
         # convolution
-        # E = torch.where(E > 0.5, self.ones, self.zeros)
-        # E = self.th(E)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
 
