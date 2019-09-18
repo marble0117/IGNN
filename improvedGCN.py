@@ -8,6 +8,7 @@ from learnProp import similarity
 from utils import accuracy
 from edge_processing import *
 
+
 class Net(MessagePassing):
     def __init__(self, edge_index, nefeat, nvfeat, nhid, nclass):
         super(Net, self).__init__()
