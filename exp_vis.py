@@ -8,7 +8,6 @@ from torch_geometric.utils import add_self_loops
 from allsumSVC import *
 from allsumSLP import *
 from learnProp import *
-from improvedGCN import *
 from noprop import *
 from utils import *
 from models import *
@@ -56,12 +55,12 @@ def draw_nx(graph, Elist, labels, train_mask):
         plt.show()
 
 
-def test_on_gcn(edge_index, E, important):
+def test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, important):
     new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=important)
     data.edge_index = new_edge_index
     acc_test = 0
     for _ in range(5):
-        acc_test += runGCN(data, verbose=False)
+        acc_test += runGCN(data, train_mask, val_mask, test_mask, verbose=False)
     return acc_test / 5
 
 
@@ -69,9 +68,9 @@ if __name__ == "__main__":
     # dataset = Planetoid(root='/tmp/Cora', name='Cora')
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
-    datasets = [# Planetoid(root='/tmp/Cora', name='Cora')]#,
+    datasets = [Planetoid(root='/tmp/Cora', name='Cora')]#,
                # Planetoid(root='/tmp/Citeseer', name='Citeseer')]
-               Planetoid(root='/tmp/Pubmed', name="Pubmed")]
+               # Planetoid(root='/tmp/Pubmed', name="Pubmed")]
     acc_top_lists = []
     acc_bottom_lists = []
     trains = [20, 40, 60, 80, 100]
@@ -90,22 +89,24 @@ if __name__ == "__main__":
 
         train_mask, val_mask, test_mask = divide_dataset(dataset, num_train_per_class, 100, 1000)
 
-        E_sum = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
-        # E_mul = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
-        # E_cat = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-        # E_l1  = learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
+        E_sum = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
+        E_mul = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
+        E_cat = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
+        E_l1  = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
+        E_nn  = learnProp_experiment("nn", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
+        E_conv = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
 
-        Elist = [E_sum]#, E_mul, E_cat, E_l1]
+        Elist = [E_sum, E_mul, E_cat, E_l1, E_nn, E_conv]
 
         acc_top_list = []
         acc_bottom_list = []
         for i, E in enumerate(Elist):
             print("Eliminate important edges")
-            acc_test = test_on_gcn(edge_index, E, True)
+            acc_test = test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, True)
             acc_top_list.append(acc_test)
 
             print("Eliminate not important edges")
-            acc_test = test_on_gcn(edge_index, E, False)
+            acc_test = test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, False)
             acc_bottom_list.append(acc_test)
 
         acc_top_lists.append(acc_top_list)
