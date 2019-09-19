@@ -23,15 +23,16 @@ class GCN(nn.Module):
         x = self.gc2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
-def runGCN(data, verbose=True):
+def runGCN(data, train_mask=None, val_mask=None, test_mask=None, verbose=True):
     edge_index = data.edge_index
     features = data.x
     labels = data.y
-    train_mask = data.train_mask
-    val_mask = data.val_mask
-    test_mask = data.test_mask
-
-    print(edge_index.size())
+    if train_mask is None:
+        train_mask = data.train_mask
+    if val_mask is None:
+        val_mask = data.val_mask
+    if test_mask is None:
+        test_mask = data.test_mask
 
     # edge_index = eliminate_interclass_edges(edge_index, labels)
 
