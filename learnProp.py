@@ -10,21 +10,23 @@ from utils import accuracy
 
 
 class Net(MessagePassing):
-    def __init__(self, edge_index, nefeat, nvfeat, nclass, features):
+    def __init__(self, e_type, edge_index, features, nclass, sim):
         super(Net, self).__init__()
+        if e_type == 'sim':
+            self.edge_func = EdgeSimNet(edge_index, features, sim)
+        elif e_type == 'nn':
+            self.edge_func = EdgeCatNet(edge_index, features)
+        elif e_type == 'conv':
+            self.edge_func = EdgeConvNet(edge_index, features, n_filt=2, d_out=4)
+        else:
+            print("Invalid edge importance calclator:", e_type)
+            exit(1)
         self.edge_index = edge_index
-        # self.edge_func = EdgeSimNet(nefeat)
-        self.edge_func = EdgeCatNet(nvfeat)
-        # self.edge_func = EdgeConvNet(features, edge_index)
-        self.fc1 = nn.Linear(nvfeat, nclass)
-        self.th = nn.Threshold(0.5, 0)
-        self.ones = torch.ones(edge_index.size()[1], 1)
-        self.zeros = torch.zeros(edge_index.size()[1], 1)
+        self.fc1 = nn.Linear(features.size(1), nclass)
 
-    def forward(self, x, edge_features):
+    def forward(self, x):
         # make a new (sparse) adjacency list
-        # E = self.edge_func(edge_features)
-        E = self.edge_func(x, self.edge_index)
+        E = self.edge_func()
 
         # convolution
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
@@ -38,37 +40,18 @@ class Net(MessagePassing):
         return x_j * E
 
 
-def similarity(edge_index, features, sim='sum'):
-    if sim == 'sum':
-        edge_features = features[edge_index[0]] + features[edge_index[1]]
-    elif sim == 'mul':
-        edge_features = features[edge_index[0]] * features[edge_index[1]]
-    elif sim == 'cat':
-        edge_features = torch.cat((features[edge_index[0]], features[edge_index[1]]), dim=1)
-    elif sim == 'l1':
-        edge_features = torch.abs(features[edge_index[0]] - features[edge_index[1]])
-    elif sim == 'l2':
-        edge_features = (features[edge_index[0]] - features[edge_index[1]]) ** 2
-    else:
-        print('invalid sim:', sim)
-        exit(-1)
-    return edge_features
-
-
-def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim):
+def learnProp_experiment(e_type, edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat'):
     # add self-loops and make edge features
-    edge_features = similarity(edge_index, features, sim)
-
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(edge_index, edge_features.size(1), features.size(1), int(max(labels)) + 1, features)
+    net = Net(e_type, edge_index, features, int(max(labels)) + 1, sim)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(30):
         optimizer.zero_grad()
-        output, _ = net(features, edge_features)
+        output, _ = net(features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
@@ -78,7 +61,7 @@ def learnProp_experiment(edge_index, features, labels, train_mask, val_mask, tes
         loss.backward()
         optimizer.step()
     net.eval()
-    output, E = net(features, edge_features)
+    output, E = net(features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
     acc_test = accuracy(output[test_mask == 1], testY)
