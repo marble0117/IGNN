@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+import torch
 from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
 
