@@ -56,8 +56,8 @@ def draw_nx(graph, Elist, labels, train_mask):
         plt.show()
 
 
-def test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important):
-    new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=important)
+def test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important, ratio=0.2):
+    new_edge_index = eliminate_edges(edge_index, E, ratio=ratio, important=important)
     data.edge_index = new_edge_index
     acc_test = 0
     for _ in range(5):
