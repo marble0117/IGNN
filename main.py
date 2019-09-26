@@ -8,6 +8,8 @@ from torch_geometric.utils import add_self_loops
 
 from allsumSVC import *
 from allsumSLP import *
+from edge_centrality import *
+from exp_vis import test_on_gcn
 from learnProp import *
 from improvedGCN import *
 from models import *
@@ -71,10 +73,12 @@ if __name__ == "__main__":
 
     # train_mask, val_mask, test_mask = divide_dataset(dataset, 80, 500, 1000)
 
+    E = calc_edge_based_centrality(edge_index, centrality='load')
+    # E = calc_node_based_centrality(edge_index, centrality='closeness')
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
     # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-    improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
+    # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:
     #     train_mask, val_mask, test_mask = divide_dataset(dataset, train_size, 500, 1000)
@@ -83,6 +87,10 @@ if __name__ == "__main__":
     #         acc_test += runGCN(data, train_mask, val_mask, test_mask, verbose=False)
     #     acc_list.append(acc_test / 5)
     # print(acc_list)
+    acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True)
+    print(acc_test)
+    acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, False)
+    print(acc_test)
 
     # draw_nx(graph, E, labels)
     # plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
