@@ -32,8 +32,9 @@ class Net(MessagePassing):
         E = self.edge_func()
 
         # convolution
-        x = self.dropout(self.relu(self.fc1(x)))
+        x = self.relu(self.fc1(x))
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
+        x = self.dropout(x)
         x = self.fc2(x)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
 
@@ -57,7 +58,7 @@ def improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, s
     testY = labels[test_mask == 1]
 
     e_type = "conv"
-    net = Net(e_type, edge_index, features, 16, int(max(labels)) + 1, sim)
+    net = Net(e_type, edge_index, features, 8, int(max(labels)) + 1, sim)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(100):
