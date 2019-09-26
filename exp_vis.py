@@ -56,7 +56,7 @@ def draw_nx(graph, Elist, labels, train_mask):
         plt.show()
 
 
-def test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, important):
+def test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important):
     new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=important)
     data.edge_index = new_edge_index
     acc_test = 0
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                # Planetoid(root='/tmp/Pubmed', name="Pubmed")]
     acc_top_lists = []
     acc_bottom_lists = []
-    trains = [20, 40, 60, 80, 100]
+    trains = [20]#, 40, 60, 80, 100]
     # for dataset in datasets:
     dataset = datasets[0]
     for num_train_per_class in trains:
@@ -88,13 +88,13 @@ if __name__ == "__main__":
         test_mask = data.test_mask
         lam1 = 0
 
-        train_mask, val_mask, test_mask = divide_dataset(dataset, num_train_per_class, 100, 1000)
+        # train_mask, val_mask, test_mask = divide_dataset(dataset, num_train_per_class, 100, 1000)
 
-        E_sum = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
-        E_mul = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
-        E_cat = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-        E_l1  = learnProp_experiment("sim", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
-        E_nn  = learnProp_experiment("nn", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
+        E_sum = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
+        E_mul = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
+        E_cat = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
+        E_l1  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
+        E_nn  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
         E_conv = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
 
         Elist = [E_sum, E_mul, E_cat, E_l1, E_nn, E_conv]
@@ -103,11 +103,11 @@ if __name__ == "__main__":
         acc_bottom_list = []
         for i, E in enumerate(Elist):
             print("Eliminate important edges")
-            acc_test = test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, True)
+            acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True)
             acc_top_list.append(acc_test)
 
             print("Eliminate not important edges")
-            acc_test = test_on_gcn(edge_index, E, train_mask, val_mask, test_mask, False)
+            acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, False)
             acc_bottom_list.append(acc_test)
 
         acc_top_lists.append(acc_top_list)
@@ -117,3 +117,7 @@ if __name__ == "__main__":
     for i in range(len(acc_top_lists)):
         print("top", acc_top_lists[i])
         print("bottom", acc_bottom_lists[i])
+
+    for E in Elist:
+        plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
+        plt.show()
