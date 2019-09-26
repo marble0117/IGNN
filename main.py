@@ -9,6 +9,7 @@ from torch_geometric.utils import add_self_loops
 from allsumSVC import *
 from allsumSLP import *
 from learnProp import *
+from improvedGCN import *
 from models import *
 from utils import *
 
@@ -72,8 +73,8 @@ if __name__ == "__main__":
 
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-    # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
+    # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
+    improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:
     #     train_mask, val_mask, test_mask = divide_dataset(dataset, train_size, 500, 1000)
@@ -82,18 +83,7 @@ if __name__ == "__main__":
     #         acc_test += runGCN(data, train_mask, val_mask, test_mask, verbose=False)
     #     acc_list.append(acc_test / 5)
     # print(acc_list)
-    print("Eliminate important edges")
-    new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=True)
-    data.edge_index = new_edge_index
-    for _ in range(5):
-        runGCN(data, verbose=False)
-
-    print("Eliminate not important edges")
-    new_edge_index = eliminate_edges(edge_index, E, ratio=0.2, important=False)
-    data.edge_index = new_edge_index
-    for _ in range(5):
-        runGCN(data, verbose=False)
 
     # draw_nx(graph, E, labels)
-    plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
-    plt.show()
+    # plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
+    # plt.show()

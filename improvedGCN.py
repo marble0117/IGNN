@@ -4,25 +4,32 @@ import torch.nn.functional as F
 from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
-from learnProp import similarity
+from edge_processing import *
 from utils import accuracy
 from edge_processing import *
 
 
 class Net(MessagePassing):
-    def __init__(self, edge_index, nefeat, nvfeat, nhid, nclass):
+    def __init__(self, e_type, edge_index, features, nhid, nclass, sim):
         super(Net, self).__init__()
+        if e_type == 'sim':
+            self.edge_func = EdgeSimNet(edge_index, features, sim)
+        elif e_type == 'nn':
+            self.edge_func = EdgeCatNet(edge_index, features)
+        elif e_type == 'conv':
+            self.edge_func = EdgeConvNet(edge_index, features, n_filt=2, d_out=4)
+        else:
+            print("Invalid edge importance calculator:", e_type)
+            exit(1)
         self.edge_index = edge_index
-        self.edge_func = EdgeSimNet(nefeat)
-        self.fc1 = nn.Linear(nvfeat, nhid)
+        self.fc1 = nn.Linear(features.size(1), nhid)
         self.fc2 = nn.Linear(nhid, nclass)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU(inplace=True)
-        self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x, edge_features):
+    def forward(self, x):
         # make a new (sparse) adjacency list
-        E = self.edge_func(edge_features)
+        E = self.edge_func()
 
         # convolution
         x = self.dropout(self.relu(self.fc1(x)))
@@ -44,18 +51,18 @@ def accuracy(pred, labels):
 
 
 def improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim):
-    edge_features = similarity(edge_index, features, sim)
 
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(edge_index, edge_features.size(1), features.size(1), 16, int(max(labels)) + 1)
+    e_type = "conv"
+    net = Net(e_type, edge_index, features, 16, int(max(labels)) + 1, sim)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(100):
         optimizer.zero_grad()
-        output = net(features, edge_features)
+        output = net(features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
@@ -64,9 +71,9 @@ def improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, s
         loss.backward()
         optimizer.step()
     net.eval()
-    output = net(features, edge_features)
+    output = net(features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
-    output = net(features, edge_features)
+    output = net(features)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
