@@ -29,7 +29,6 @@ if __name__ == "__main__":
     train_mask = data.train_mask
     val_mask = data.val_mask
     test_mask = data.test_mask
-    lam1 = 0
 
     E_bet = calc_edge_based_centrality(edge_index, centrality='betweenness')
     E_load = calc_edge_based_centrality(edge_index, centrality='load')
@@ -38,17 +37,18 @@ if __name__ == "__main__":
     E_cls = calc_node_based_centrality(edge_index, centrality='closeness')
 
     Elist = [E_bet, E_load, E_deg, E_eig, E_cls]
+    # Elist = [E_deg, E_eig, E_cls]
 
     all_acc_list_imp = []
     all_acc_list_un = []
     for E in Elist:
         acc_list_imp = []
         acc_list_un = []
-        for ratio in [i * 0.05 for i in range(1, 11)]:
+        for ratio in [i * 0.05 for i in range(1, 21)]:
             acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important=True, ratio=ratio)
             acc_list_imp.append(acc_test)
         all_acc_list_imp.append(acc_list_imp)
-        for ratio in [i * 0.05 for i in range(1, 11)]:
+        for ratio in [i * 0.05 for i in range(1, 21)]:
             acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important=False, ratio=ratio)
             acc_list_un.append(acc_test)
         all_acc_list_un.append(acc_list_un)
