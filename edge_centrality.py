@@ -43,14 +43,13 @@ def calc_node_based_centrality(edge_index, centrality='degree'):
     return edges_centrality
 
 
-def init_centrality(dataset, file_path):
+def init_centrality(data, file_path):
     """
     :param dataset:
     :param file_path:
     :return:
     """
     print("no pickle file")
-    data = dataset[0]
     edge_index = data.edge_index
     centrality_dict = dict()
 
@@ -81,24 +80,24 @@ def convert_dict_to_tensor(cent_dict, edge_index):
     return torch.tensor(E).view(-1, 1)
 
 
-def load_centrality(dataset):
+def load_centrality(data, name):
     """
 
     :param dataset:
     :return:
     """
     file_dir = os.path.dirname(os.path.abspath(__file__)) + '/baselines/'
-    data_name = dataset.name
+    data_name = name
     file_path = file_dir + data_name + '.pkl'
 
     if not os.path.exists(file_path):
         os.makedirs(file_dir, exist_ok=True)
-        init_centrality(dataset, file_path)
+        init_centrality(data, file_path)
 
     centrality_dict = dict()
     with open(file_path, 'rb') as f:
         cents_dict = pickle.load(f)
-        edge_index = dataset[0].edge_index
+        edge_index = data.edge_index
         for cent_name, cent_dict in cents_dict.items():
             centrality_dict[cent_name] = convert_dict_to_tensor(cent_dict, edge_index)
         print("finish loading the pkl file")
