@@ -1,6 +1,7 @@
 from torch_geometric.datasets import Planetoid
 
 from edge_centrality import load_centrality
+from node_similarity import load_similarity
 from models import *
 from utils import *
 
@@ -18,9 +19,9 @@ def test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important,
 
 
 if __name__ == "__main__":
-    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    dataset = Planetoid(root='/tmp/Cora', name='Cora')
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
-    dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
+    # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
     labels = data.y
@@ -30,7 +31,8 @@ if __name__ == "__main__":
     val_mask = data.val_mask
     test_mask = data.test_mask
 
-    edges_centrality = load_centrality(data, name=dataset.name)
+    # edges_centrality = load_centrality(data, name=dataset.name)
+    edges_centrality = load_similarity(data, name=dataset.name)
 
     all_acc_list_imp = []
     all_acc_list_un = []
