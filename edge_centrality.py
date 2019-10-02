@@ -45,7 +45,7 @@ def calc_node_based_centrality(edge_index, centrality='degree'):
 
 def init_centrality(data, file_path):
     """
-    :param dataset:
+    :param data:
     :param file_path:
     :return:
     """
@@ -83,10 +83,10 @@ def convert_dict_to_tensor(cent_dict, edge_index):
 def load_centrality(data, name):
     """
 
-    :param dataset:
+    :param data:
     :return:
     """
-    file_dir = os.path.dirname(os.path.abspath(__file__)) + '/baselines/'
+    file_dir = os.path.dirname(os.path.abspath(__file__)) + '/centrality/'
     data_name = name
     file_path = file_dir + data_name + '.pkl'
 
