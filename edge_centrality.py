@@ -66,6 +66,8 @@ def init_centrality(data, file_path):
         print(c, 'done')
 
     with open(file_path, 'wb') as f:
+        file_dir = os.path.dirname(file_path)
+        os.makedirs(file_dir, exist_ok=True)
         pickle.dump(centrality_dict, f)
 
 
@@ -91,7 +93,6 @@ def load_centrality(data, name):
     file_path = file_dir + data_name + '.pkl'
 
     if not os.path.exists(file_path):
-        os.makedirs(file_dir, exist_ok=True)
         init_centrality(data, file_path)
 
     centrality_dict = dict()

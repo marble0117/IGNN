@@ -62,6 +62,8 @@ def init_similarity(data, file_path):
         print(s, "done")
 
     with open(file_path, 'wb') as f:
+        file_dir = os.path.dirname(file_path)
+        os.makedirs(file_dir, exist_ok=True)
         pickle.dump(similarity_dict, f)
 
 
@@ -87,7 +89,6 @@ def load_similarity(data, name):
     file_path = file_dir + data_name + '.pkl'
 
     if not os.path.exists(file_path):
-        os.makedirs(file_dir, exist_ok=True)
         init_similarity(data, file_path)
 
     with open(file_path, 'rb') as f:
