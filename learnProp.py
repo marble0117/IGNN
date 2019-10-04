@@ -66,7 +66,6 @@ def learnProp_experiment(data, name, e_type, sim='cat'):
         loss = train_loss
         loss.backward()
         optimizer.step()
-    net.eval()
     output, E = net(features)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)

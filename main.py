@@ -57,7 +57,8 @@ def draw_nx(graph, E, labels):
 
 
 if __name__ == "__main__":
-    dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    net_name = 'Citeseer'
+    dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
