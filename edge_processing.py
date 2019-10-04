@@ -1,6 +1,9 @@
+import networkx as nx
 import torch
 import torch.nn as nn
 
+from edge_centrality import load_centrality
+from node_similarity import load_similarity
 
 class EdgeSimNet(nn.Module):
     def __init__(self, edge_index, features, sim='cat'):
@@ -91,6 +94,39 @@ class EdgeConvNet(nn.Module):
         feat = self.reshape(feat)
         feat = self.sigmoid(self.fc3(feat))
         return feat
+
+
+class EdgeCentralityNet(nn.Module):
+    def __init__(self, data, name):
+        super(EdgeCentralityNet, self).__init__()
+        self.edge_features = self._make_structure_features(data, name)
+        self.fc1 = nn.Linear(self.edge_features.size(1), 5)
+        self.fc2 = nn.Linear(5, 1)
+        self.dropout = nn.Dropout(p=0.5)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def _make_structure_features(self, data, name):
+        edge_index = data.edge_index
+        adj_list = edge_index.numpy().T
+        G = nx.Graph()
+        G.add_edges_from(adj_list)
+
+        edges_centrality = load_centrality(data, name=name)
+        edges_similarity = load_similarity(data, name=name)
+
+        centrality_tensor = torch.cat(list(edges_centrality.values()), 1)
+        similarity_tensor = torch.cat(list(edges_similarity.values())[1:], 1)
+        edge_features = torch.cat((centrality_tensor, similarity_tensor), 1)
+        return edge_features
+
+    def forward(self):
+        E = self.relu(self.fc1(self.edge_features))
+        E = self.dropout(E)
+        E = self.sigmoid(self.fc2(E))
+        print(torch.mean(E))
+        print(torch.std(E))
+        return E
 
 
 def convert_feature_to_tensor(features, edge_index):
