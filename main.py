@@ -68,8 +68,6 @@ if __name__ == "__main__":
     train_mask = data.train_mask
     val_mask = data.val_mask
     test_mask = data.test_mask
-    lam1 = 0
-
 
     # train_mask, val_mask, test_mask = divide_dataset(dataset, 80, 500, 1000)
 
@@ -77,7 +75,7 @@ if __name__ == "__main__":
     # E = calc_node_based_centrality(edge_index, centrality='closeness')
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
+    # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:

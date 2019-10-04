@@ -86,16 +86,15 @@ if __name__ == "__main__":
         train_mask = data.train_mask
         val_mask = data.val_mask
         test_mask = data.test_mask
-        lam1 = 0
 
         # train_mask, val_mask, test_mask = divide_dataset(dataset, num_train_per_class, 100, 1000)
 
-        E_sum = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='sum')
-        E_mul = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='mul')
-        E_cat = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat')
-        E_l1  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='l1')
-        E_nn  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
-        E_conv = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, lam1)
+        E_sum = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='sum')
+        E_mul = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='mul')
+        E_cat = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
+        E_l1  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='l1')
+        E_nn  = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask)
+        E_conv = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask)
 
         Elist = [E_sum, E_mul, E_cat, E_l1, E_nn, E_conv]
 

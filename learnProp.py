@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from ignite.handlers import EarlyStopping
@@ -56,8 +55,7 @@ def learnProp_experiment(e_type, edge_index, features, labels, train_mask, val_m
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
         print("epoch:", i + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
-        l1reg = torch.norm(net.fc1.weight, 1)
-        loss = train_loss + lam1 * l1reg
+        loss = train_loss
         loss.backward()
         optimizer.step()
     net.eval()
