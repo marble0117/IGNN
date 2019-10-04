@@ -9,6 +9,8 @@ from torch_geometric.utils import add_self_loops
 from allsumSVC import *
 from allsumSLP import *
 from edge_centrality import *
+from gcelw import train_gcelw
+import exp_baselines as ex
 from exp_vis import test_on_gcn
 from learnProp import *
 from improvedGCN import *
@@ -57,7 +59,7 @@ def draw_nx(graph, E, labels):
 
 
 if __name__ == "__main__":
-    net_name = 'Citeseer'
+    net_name = 'Pubmed'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
     # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
@@ -76,8 +78,11 @@ if __name__ == "__main__":
     # E = calc_node_based_centrality(edge_index, centrality='closeness')
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
-    E = learnProp_experiment(data, dataset.name, 'cent')
+    # E = learnProp_experiment(data, dataset.name, 'cent')
+    runGAT(data)
+    exit()
+    # train_gcelw(data)
+    # exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:
@@ -87,11 +92,31 @@ if __name__ == "__main__":
     #         acc_test += runGCN(data, train_mask, val_mask, test_mask, verbose=False)
     #     acc_list.append(acc_test / 5)
     # print(acc_list)
-    acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True)
-    print(acc_test)
-    acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, False)
-    print(acc_test)
+    # acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True)
+    # print(acc_test)
+    # acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, False)
+    # print(acc_test)
 
+    # eliminate edges on each percentage
+    acc_list_imp_avg = []
+    acc_list_imp_std = []
+    acc_list_un_avg = []
+    acc_list_un_std = []
+    for ratio in [i * 0.05 for i in range(1, 21)]:
+        acc_avg, acc_std = ex.test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True, 10, ratio=ratio)
+        print("avg:", acc_avg, "std:", acc_std)
+        acc_list_imp_avg.append(acc_avg)
+        acc_list_imp_std.append(acc_std)
+    for ratio in [i * 0.05 for i in range(1, 21)]:
+        acc_avg, acc_std = ex.test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, False, 10, ratio=ratio)
+        print("avg:", acc_avg, "std:", acc_std)
+        acc_list_un_avg.append(acc_avg)
+        acc_list_un_std.append(acc_std)
+
+    print(acc_list_imp_avg)
+    print(acc_list_imp_std)
+    print(acc_list_un_avg)
+    print(acc_list_un_std)
     # draw_nx(graph, E, labels)
     plt.hist(E.detach().numpy(), bins=50, range=(0, 1.0))
     plt.show()
