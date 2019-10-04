@@ -71,11 +71,12 @@ if __name__ == "__main__":
 
     # train_mask, val_mask, test_mask = divide_dataset(dataset, 80, 500, 1000)
 
-    E = calc_edge_based_centrality(edge_index, centrality='load')
+    # E = calc_edge_based_centrality(edge_index, centrality='load')
     # E = calc_node_based_centrality(edge_index, centrality='closeness')
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
     # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
+    E = learnProp_experiment(data, dataset.name, 'conv')
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:

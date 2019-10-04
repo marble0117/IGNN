@@ -9,19 +9,21 @@ from utils import accuracy
 
 
 class Net(MessagePassing):
-    def __init__(self, e_type, edge_index, features, nclass, sim):
+    def __init__(self, data, name, e_type, sim):
         super(Net, self).__init__()
         if e_type == 'sim':
-            self.edge_func = EdgeSimNet(edge_index, features, sim)
+            self.edge_func = EdgeSimNet(data.edge_index, data.x, sim)
         elif e_type == 'nn':
-            self.edge_func = EdgeCatNet(edge_index, features)
+            self.edge_func = EdgeCatNet(data.edge_index, data.x)
         elif e_type == 'conv':
-            self.edge_func = EdgeConvNet(edge_index, features, n_filt=2, d_out=4)
+            self.edge_func = EdgeConvNet(data.edge_index, data.x, n_filt=2, d_out=4)
+        elif e_type == 'struc':
+            self.edge_func = EdgeCentralityNet(data, name)
         else:
             print("Invalid edge importance calclator:", e_type)
             exit(1)
-        self.edge_index = edge_index
-        self.fc1 = nn.Linear(features.size(1), nclass)
+        self.edge_index = data.edge_index
+        self.fc1 = nn.Linear(data.x.size(1), int(data.y.max()) + 1)
 
     def forward(self, x):
         # make a new (sparse) adjacency list
@@ -39,13 +41,19 @@ class Net(MessagePassing):
         return x_j * E
 
 
-def learnProp_experiment(e_type, edge_index, features, labels, train_mask, val_mask, test_mask, lam1, sim='cat'):
+# def learnProp_experiment(e_type, edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat'):
+def learnProp_experiment(data, name, e_type, sim='cat'):
     # add self-loops and make edge features
+    features = data.x
+    labels = data.y
+    train_mask = data.train_mask
+    val_mask = data.val_mask
+    test_mask = data.test_mask
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(e_type, edge_index, features, int(max(labels)) + 1, sim)
+    net = Net(data, name, e_type, sim)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(30):
