@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
     # E = learnProp_experiment("conv", edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
-    E = learnProp_experiment(data, dataset.name, 'conv')
+    E = learnProp_experiment(data, dataset.name, 'cent')
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
     # acc_list = []
     # for train_size in [20, 40, 60, 80, 100]:
@@ -92,5 +92,5 @@ if __name__ == "__main__":
     print(acc_test)
 
     # draw_nx(graph, E, labels)
-    # plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
-    # plt.show()
+    plt.hist(E.detach().numpy(), bins=50, range=(0, 1.0))
+    plt.show()

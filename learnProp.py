@@ -17,7 +17,7 @@ class Net(MessagePassing):
             self.edge_func = EdgeCatNet(data.edge_index, data.x)
         elif e_type == 'conv':
             self.edge_func = EdgeConvNet(data.edge_index, data.x, n_filt=2, d_out=4)
-        elif e_type == 'struc':
+        elif e_type == 'cent':
             self.edge_func = EdgeCentralityNet(data, name)
         else:
             print("Invalid edge importance calclator:", e_type)
