@@ -89,8 +89,6 @@ def runGCN(data, train_mask=None, val_mask=None, test_mask=None, verbose=True):
     if test_mask is None:
         test_mask = data.test_mask
 
-    # edge_index = eliminate_interclass_edges(edge_index, labels)
-
     trainY = labels[train_mask == 1]
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
