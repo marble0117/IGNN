@@ -18,9 +18,10 @@ class Net(MessagePassing):
         elif e_type == 'conv':
             self.edge_func = EdgeConvNet(data.edge_index, data.x, n_filt=2, d_out=4)
         elif e_type == 'cent':
-            self.edge_func = EdgeCentralityNet(data, name)
+            cent_list = ["eigenvector", "cosine", "degree"]
+            self.edge_func = EdgeCentralityNet(data, name, cent_list)
         else:
-            print("Invalid edge importance calclator:", e_type)
+            print("Invalid edge importance caluclator", e_type)
             exit(1)
         self.edge_index = data.edge_index
         self.fc1 = nn.Linear(data.x.size(1), int(data.y.max()) + 1)
@@ -56,13 +57,14 @@ def learnProp_experiment(data, name, e_type, sim='cat'):
     net = Net(data, name, e_type, sim)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
-    for i in range(30):
+    for i in range(50):
         optimizer.zero_grad()
         output, _ = net(features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
         print("epoch:", i + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
+        print(accuracy(output[test_mask == 1], testY))
         loss = train_loss
         loss.backward()
         optimizer.step()
