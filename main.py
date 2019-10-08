@@ -12,6 +12,7 @@ from edge_centrality import *
 from gcelw import train_gcelw
 import exp_baselines as ex
 from exp_vis import test_on_gcn
+from functions import *
 from learnProp import *
 from improvedGCN import *
 from models import *
@@ -59,10 +60,8 @@ def draw_nx(graph, E, labels):
 
 
 if __name__ == "__main__":
-    net_name = 'Pubmed'
+    net_name = 'Cora'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
-    # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
-    # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
     labels = data.y
@@ -78,19 +77,16 @@ if __name__ == "__main__":
     # E = calc_node_based_centrality(edge_index, centrality='closeness')
     # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    # E = learnProp_experiment(data, dataset.name, 'cent')
-    runGAT(data)
-    exit()
+    E = learnProp_experiment(data, dataset.name, 'cent')
+    # E = improvedGCN(data, dataset.name, 'cent')
+    # new_edge_index = eliminate_interclass_edges(edge_index, labels)
+    # data.edge_index = new_edge_index
+
+    # runGAT(data)
     # train_gcelw(data)
     # exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
-    # acc_list = []
-    # for train_size in [20, 40, 60, 80, 100]:
-    #     train_mask, val_mask, test_mask = divide_dataset(dataset, train_size, 500, 1000)
-    #     acc_test = 0
-    #     for _ in range(5):
-    #         acc_test += runGCN(data, train_mask, val_mask, test_mask, verbose=False)
-    #     acc_list.append(acc_test / 5)
+
     # print(acc_list)
     # acc_test = test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, True)
     # print(acc_test)
