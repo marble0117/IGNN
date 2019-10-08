@@ -20,9 +20,9 @@ def test_on_gcn(data, edge_index, E, train_mask, val_mask, test_mask, important,
 
 
 if __name__ == "__main__":
-    # dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    dataset = Planetoid(root='/tmp/Cora', name='Cora')
     # dataset = Planetoid(root='/tmp/Pubmed', name="Pubmed")
-    dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
+    # dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
     data = dataset[0]
     features = data.x
     labels = data.y
