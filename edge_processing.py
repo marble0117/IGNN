@@ -100,7 +100,7 @@ class EdgeCentralityNet(nn.Module):
     def __init__(self, data, name, cent_list):
         super(EdgeCentralityNet, self).__init__()
         self.edge_features = self._make_structure_features(data, name, cent_list)
-        self.fc1 = nn.Linear(self.edge_features.size(1), 5)
+        self.fc1 = nn.Linear(self.edge_features.size(1), 1)
         self.fc2 = nn.Linear(5, 1)
         self.dropout = nn.Dropout(p=0.5)
         self.relu = nn.ReLU()
@@ -124,9 +124,10 @@ class EdgeCentralityNet(nn.Module):
         return edge_features
 
     def forward(self):
-        E = self.relu(self.fc1(self.edge_features))
-        E = self.dropout(E)
-        E = self.sigmoid(self.fc2(E))
+        # E = self.relu(self.fc1(self.edge_features))
+        # E = self.dropout(E)
+        # E = self.sigmoid(self.fc2(E))
+        E = self.sigmoid(self.fc1(self.edge_features))
         return E
 
 
