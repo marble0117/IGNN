@@ -97,16 +97,16 @@ class EdgeConvNet(nn.Module):
 
 
 class EdgeCentralityNet(nn.Module):
-    def __init__(self, data, name, cent_list):
+    def __init__(self, data, name, cent_list=None):
         super(EdgeCentralityNet, self).__init__()
         self.edge_features = self._make_structure_features(data, name, cent_list)
-        self.fc1 = nn.Linear(self.edge_features.size(1), 1)
+        self.fc1 = nn.Linear(self.edge_features.size(1), 5)
         self.fc2 = nn.Linear(5, 1)
-        self.dropout = nn.Dropout(p=0.5)
+        self.dropout = nn.Dropout(p=0.3)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
-    def _make_structure_features(self, data, name, cent_list):
+    def _make_structure_features(self, data, name, cent_list=None):
         edge_index = data.edge_index
         adj_list = edge_index.numpy().T
         G = nx.Graph()
@@ -115,19 +115,19 @@ class EdgeCentralityNet(nn.Module):
         edges_centrality = load_centrality(data, name=name)
         edges_similarity = load_similarity(data, name=name)
         edges_importance = {**edges_centrality, **edges_similarity}
-        importance_tensor = [edges_importance[name] / torch.max(edges_importance[name]) for name in cent_list]
+        if cent_list != None:
+            importance_tensor = [edges_importance[name] for name in cent_list]
+        else:
+            importance_tensor = list(edges_importance.values())
         edge_features = torch.cat(importance_tensor, 1)
-
-        # centrality_tensor = torch.cat(list(edges_centrality.values()), 1)
-        # similarity_tensor = torch.cat(list(edges_similarity.values())[1:], 1)
-        # edge_features = torch.cat((centrality_tensor, similarity_tensor), 1)
+        # normalize (0 to 1)
+        edge_features / torch.max(edge_features, dim=0)[0]
         return edge_features
 
     def forward(self):
-        # E = self.relu(self.fc1(self.edge_features))
-        # E = self.dropout(E)
-        # E = self.sigmoid(self.fc2(E))
-        E = self.sigmoid(self.fc1(self.edge_features))
+        E = self.relu(self.fc1(self.edge_features))
+        E = self.dropout(E)
+        E = self.sigmoid(self.fc2(E))
         return E
 
 
