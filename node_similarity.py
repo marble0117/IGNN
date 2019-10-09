@@ -26,7 +26,7 @@ def calc_node_similarity(edge_index, sim):
     E = []
     if sim == 'neighbors':
         for u, v in adj_list:
-            E.append(len([nx.common_neighbors(G, u, v)]))
+            E.append(float(len(list(nx.common_neighbors(G, u, v)))))
     elif sim == 'jaccard':
         for u, v in adj_list:
             jac = len([nx.common_neighbors(G, u, v)])
