@@ -19,7 +19,7 @@ class Net(MessagePassing):
             self.edge_func = EdgeConvNet(data.edge_index, data.x, n_filt=2, d_out=4)
         elif e_type == 'cent':
             cent_list = ["betweenness", "eigenvector", "cosine", "degree"]
-            self.edge_func = EdgeCentralityNet(data, name, cent_list)
+            self.edge_func = EdgeCentralityNet(data, name)
         else:
             print("Invalid edge importance caluclator", e_type)
             exit(1)
@@ -59,12 +59,11 @@ def learnProp_experiment(data, name, e_type, sim='cat'):
     net.train()
     for i in range(50):
         optimizer.zero_grad()
-        output, _ = net(features)
+        output, E = net(features)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
         print("epoch:", i + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
-        print(accuracy(output[test_mask == 1], testY))
         loss = train_loss
         loss.backward()
         optimizer.step()
