@@ -75,16 +75,16 @@ if __name__ == "__main__":
 
     # E = calc_edge_based_centrality(edge_index, centrality='load')
     # E = calc_node_based_centrality(edge_index, centrality='closeness')
-    # svc_experiment(graph, features, labels, train_mask, test_mask, 3)
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
-    E = learnProp_experiment(data, dataset.name, 'cent')
+    # E = learnProp_experiment(data, dataset.name, 'cent')
     # E = improvedGCN(data, dataset.name, 'cent')
     # new_edge_index = eliminate_interclass_edges(edge_index, labels)
     # data.edge_index = new_edge_index
 
-    # runGAT(data)
-    # train_gcelw(data)
-    # exit()
+    for _ in range(10):
+        runGCN(data, verbose=False)
+        # runGAT(data, verbose=False)
+    exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
 
     # print(acc_list)
