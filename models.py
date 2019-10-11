@@ -88,6 +88,24 @@ class GCN(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+class GCN3layer(nn.Module):
+    def __init__(self, nfeat, nhid, nclass):
+        super(GCN3layer, self).__init__()
+        self.gc1 = GCNConv(nfeat, nhid)
+        self.gc2 = GCNConv(nhid, nhid)
+        self.gc3 = GCNConv(nhid, nclass)
+
+    def forward(self, x, edge_index):
+        x = self.gc1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.gc2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.gc3(x, edge_index)
+        return F.log_softmax(x, dim=1)
+
+
 def runGCN(data, train_mask=None, val_mask=None, test_mask=None,
            early_stopping=True, patience=10, verbose=True):
     edge_index = data.edge_index
@@ -104,7 +122,8 @@ def runGCN(data, train_mask=None, val_mask=None, test_mask=None,
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    model = GCN(features.size()[1], 16, int(torch.max(labels)) + 1)
+    # model = GCN(features.size()[1], 16, int(torch.max(labels)) + 1)
+    model = GCN3layer(features.size()[1], 16, int(torch.max(labels)) + 1)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     model.train()
     min_val_loss = 100000
