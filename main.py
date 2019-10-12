@@ -17,46 +17,8 @@ from learnProp import *
 from improvedGCN import *
 from models import *
 from utils import *
+from drawing import draw_classification_result
 
-
-def draw_nx(graph, E, labels):
-    graph = add_self_loops(graph)[0]
-    edges = list(graph)
-    weight = list(E.detach().numpy())
-    edgelist = []
-    weakedge = []
-    strongedge = []
-    for i, w in enumerate(weight):
-        edgelist.append((int(edges[0][i]), int(edges[1][i]), float(w)))
-        if w > 0.5:
-            strongedge.append((int(edges[0][i]), int(edges[1][i])))
-        else:
-            weakedge.append((int(edges[0][i]), int(edges[1][i])))
-    G = nx.Graph()
-    G.add_weighted_edges_from(edgelist)
-    y = list(labels)
-    color = []
-    for v in list(G):
-        color.append(y[v])
-
-    train_node = torch.where(train_mask == 1)[0].tolist()
-    pos = nx.spring_layout(G, k=0.04, weight=None)
-    # nodes
-    # set the size of training nodes to 90
-    node_size = [10] * G.number_of_nodes()
-    for v in list(G):
-        if v in train_node:
-            node_size[v] = 90
-    nx.draw_networkx_nodes(G, pos, node_color=color, node_size=node_size)
-    # edge importance < 0.5
-    nx.draw_networkx_edges(G, pos, edgelist=weakedge, edge_color='red', width=2.0)
-    # edge importance > 0.5
-    nx.draw_networkx_edges(G, pos, edgelist=strongedge, edge_color='black', width=0.3, alpha=0.1)
-    plt.show()
-
-    # historgram
-    plt.hist(E.detach().numpy(), bins=20, range=(0, 1.0))
-    plt.show()
 
 
 if __name__ == "__main__":
@@ -82,8 +44,9 @@ if __name__ == "__main__":
     # data.edge_index = new_edge_index
 
     for _ in range(10):
-        runGCN(data, verbose=False)
+        _, output = runGCN(data, verbose=False)
         # runGAT(data, verbose=False)
+        draw_classification_result(data, output)
     exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
 
