@@ -1,13 +1,8 @@
-import networkx as nx
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
 import torch
 from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
 
-from allsumSVC import *
-from allsumSLP import *
 from edge_centrality import *
 from gcelw import train_gcelw
 import exp_baselines as ex

@@ -6,8 +6,6 @@ import torch
 from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
 
-from allsumSVC import *
-from allsumSLP import *
 from learnProp import *
 from noprop import *
 from utils import *

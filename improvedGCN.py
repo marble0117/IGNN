@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ignite.handlers import EarlyStopping
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
 from edge_processing import *
