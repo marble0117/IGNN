@@ -27,8 +27,6 @@ def check_neighbor_class(data, output):
                 samecount += 1
         wrong_neigh.append(wrongcount / nneigh)
         wrong_same.append(samecount / nneigh)
-    print(wrong_neigh)
-    print(wrong_same)
     plt.scatter(wrong_same, wrong_neigh)
     plt.xlabel('percentage of the same class neighbors')
     plt.ylabel('percentage of neighbor nodes classified mistakenly')
