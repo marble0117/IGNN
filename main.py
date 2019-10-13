@@ -13,11 +13,12 @@ from improvedGCN import *
 from models import *
 from utils import *
 from drawing import draw_classification_result
+from analyzer.node_analysis import *
 
 
 
 if __name__ == "__main__":
-    net_name = 'Cora'
+    net_name = 'Citeseer'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
     data = dataset[0]
     features = data.x
@@ -41,7 +42,8 @@ if __name__ == "__main__":
     for _ in range(10):
         _, output = runGCN(data, verbose=False)
         # runGAT(data, verbose=False)
-        draw_classification_result(data, output)
+        # draw_classification_result(data, output)
+        check_neighbor_class(data, output)
     exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
 
