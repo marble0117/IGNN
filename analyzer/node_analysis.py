@@ -5,6 +5,23 @@ import torch
 import torch.nn.functional as F
 
 
+def check_misclassified_class(data, output):
+    _, indices = torch.max(output, 1)
+    result = (data.y == indices)
+    wronglist = list((result == False).nonzero().numpy().T[0])
+    nclass = int(torch.max(data.y)) + 1
+    wrong_class = [[0 for _ in range(nclass)] for _ in range(nclass)]
+
+    for node in wronglist:
+        true_c = data.y[node]
+        pred_c = indices[node]
+        wrong_class[true_c][pred_c] += 1
+    for i, l in enumerate(wrong_class):
+        print("class", i)
+        print(l)
+
+
+
 def check_feature_similarity(data, output):
     train_node_feature = data.x[data.train_mask == 1]
     train_node_class = data.y[data.train_mask == 1]
