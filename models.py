@@ -71,7 +71,7 @@ def runGAT(data, train_mask=None, val_mask=None, test_mask=None,
     output = model(features, edge_index)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
-    return acc_test
+    return acc_test, output
 
 
 class GCN(nn.Module):
