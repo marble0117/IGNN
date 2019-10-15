@@ -24,6 +24,25 @@ def draw_classification_result(data, output):
     plt.show()
 
 
+def draw_graph(data, interclass=False):
+    adj_list = data.edge_index.numpy().T
+    G = nx.Graph()
+    G.add_edges_from(adj_list)
+    pos = nx.spring_layout(G)
+    ordered_labels = data.y[list(G)]
+    color = list(ordered_labels.numpy())
+    nx.draw_networkx(G, pos, node_color=color, with_labels=False, node_size=30, width=0.1)
+    if interclass:
+        source, target = data.edge_index
+        same_lbl = data.y[source] == data.y[target]
+        edge_index = edge_index.T
+        new_edge_index = edge_index[same_lbl]
+        new_edge_index = new_edge_index.T
+
+    plt.show()
+
+
+
 def draw_nx(graph, E, labels, train_mask):
     edges = list(graph)
     weight = list(E.detach().numpy())
