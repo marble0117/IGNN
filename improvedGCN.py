@@ -27,20 +27,20 @@ class Net(MessagePassing):
         self.edge_index = data.edge_index
         self.fc1 = nn.Linear(data.x.size(1), nhid)
         self.fc2 = nn.Linear(nhid, nclass)
-        self.dropout = nn.Dropout(p=0.25)
-        self.relu = nn.ReLU(inplace=True)
+        self.p = 0.5
 
     def forward(self, x):
         # make a new (sparse) adjacency list
         E = self.edge_func()
 
         # convolution
-        x = self.relu(self.fc1(x))
+        x = F.elu(self.fc1(x))
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
-        x = self.dropout(x)
+        x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
+        x = F.dropout(x, p=self.p, training=self.training)
         x = self.fc2(x)
         x = self.propagate(self.edge_index, size=(x.size(0), x.size(0)), x=x, E=E, aggr='mean')
-        print(np.histogram(E.detach().numpy()))
+        # print(np.histogram(E.detach().numpy()))
 
         # prediction
         return F.log_softmax(x, dim=1), E
@@ -66,7 +66,7 @@ def improvedGCN(data, name, e_type):
     valY = labels[val_mask == 1]
     testY = labels[test_mask == 1]
 
-    net = Net(data, name, e_type, 8, int(max(labels)) + 1)
+    net = Net(data, name, e_type, 16, int(max(labels)) + 1)
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01, weight_decay=5e-4)
     net.train()
     for i in range(200):
