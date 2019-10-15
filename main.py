@@ -12,13 +12,13 @@ from learnProp import *
 from improvedGCN import *
 from models import *
 from utils import *
-from drawing import draw_classification_result
+from drawing import *
 from analyzer.node_analysis import *
 
 
 
 if __name__ == "__main__":
-    net_name = 'Cora'
+    net_name = 'Citeseer'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
     data = dataset[0]
     features = data.x
@@ -36,15 +36,17 @@ if __name__ == "__main__":
     # neural_experiment(graph, features, labels, train_mask, test_mask, 3)
     # E = learnProp_experiment(data, dataset.name, 'cent')
     # E = improvedGCN(data, dataset.name, 'cent')
-    new_edge_index = eliminate_interclass_edges(edge_index, labels)
-    data.edge_index = new_edge_index
+    # new_edge_index = eliminate_interclass_edges(edge_index, labels)
+    # data.edge_index = new_edge_index
+    # draw_graph(data)
 
     for _ in range(10):
         _, output = runGCN(data, verbose=False)
-        # runGAT(data, verbose=False)
+        # _, output = runGAT(data, verbose=False)
         # draw_classification_result(data, output)
         # check_neighbor_class(data, output)
-        check_feature_similarity(data, output)
+        # check_misclassified_class(data, output)
+        # check_feature_similarity(data, output)
     exit()
     # improvedGCN(edge_index, features, labels, train_mask, val_mask, test_mask, sim='cat')
 
