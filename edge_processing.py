@@ -173,6 +173,7 @@ def make_similarity_graph(data, name, threshold):
     # sim_mat[i][i] = 0 for i in all nodes
     sim_mat = sim_mat - torch.diag(sim_mat.diag())
     sim_mat[sim_mat < threshold] = 0
+    sim_mat[sim_mat >= threshold] = 1
     sp_sim = sim_mat.to_sparse()
     return sp_sim
 
