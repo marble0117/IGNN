@@ -8,6 +8,23 @@ from utils import accuracy
 from functions import *
 
 
+def get_masks(data, train_mask, val_mask, test_mask):
+    if train_mask is None:
+        train_mask = data.train_mask
+    if val_mask is None:
+        val_mask = data.val_mask
+    if test_mask is None:
+        test_mask = data.test_mask
+    return train_mask, val_mask, test_mask
+
+
+def get_labels(data, train_mask, val_mask, test_mask):
+    trainY = data.y[train_mask == 1]
+    valY = data.y[val_mask == 1]
+    testY = data.y[test_mask == 1]
+    return trainY, valY, testY
+
+
 class GAT(nn.Module):
     def __init__(self, nfeat, nhid, nclass, heads):
         super(GAT, self).__init__()
@@ -24,22 +41,13 @@ class GAT(nn.Module):
 
 
 def run_gat(data, train_mask=None, val_mask=None, test_mask=None,
-           early_stopping=True, patience=100, verbose=True):
+            early_stopping=True, patience=100, verbose=True):
     edge_index = data.edge_index
     features = data.x
-    labels = data.y
-    if train_mask is None:
-        train_mask = data.train_mask
-    if val_mask is None:
-        val_mask = data.val_mask
-    if test_mask is None:
-        test_mask = data.test_mask
+    train_mask, val_mask, test_mask = get_masks(data, train_mask, val_mask, test_mask)
+    trainY, valY, testY = get_labels(data, train_mask, val_mask, test_mask)
 
-    trainY = labels[train_mask == 1]
-    valY = labels[val_mask == 1]
-    testY = labels[test_mask == 1]
-
-    model = GAT(features.size()[1], 8, int(torch.max(labels)) + 1, heads=8)
+    model = GAT(features.size()[1], 8, int(torch.max(data.y)) + 1, heads=8)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=5e-4)
     model.train()
     count = 0
@@ -107,22 +115,13 @@ class GCN3layer(nn.Module):
 
 
 def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
-           early_stopping=True, patience=10, verbose=True):
+            early_stopping=True, patience=10, verbose=True):
     edge_index = data.edge_index
     features = data.x
-    labels = data.y
-    if train_mask is None:
-        train_mask = data.train_mask
-    if val_mask is None:
-        val_mask = data.val_mask
-    if test_mask is None:
-        test_mask = data.test_mask
+    train_mask, val_mask, test_mask = get_masks(data, train_mask, val_mask, test_mask)
+    trainY, valY, testY = get_labels(data, train_mask, val_mask, test_mask)
 
-    trainY = labels[train_mask == 1]
-    valY = labels[val_mask == 1]
-    testY = labels[test_mask == 1]
-
-    model = GCN(features.size()[1], 16, int(torch.max(labels)) + 1)
+    model = GCN(features.size()[1], 16, int(torch.max(data.y)) + 1)
     # model = GCN3layer(features.size()[1], 16, int(torch.max(labels)) + 1)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     model.train()
