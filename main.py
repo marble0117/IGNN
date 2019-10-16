@@ -4,6 +4,7 @@ from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
 
 from edge_centrality import *
+from edge_processing import make_adj_sim_conbined_graph
 from gcelw import train_gcelw
 import exp_baselines as ex
 from exp_vis import test_on_gcn
@@ -18,7 +19,7 @@ from analyzer.node_analysis import *
 
 
 if __name__ == "__main__":
-    net_name = 'Citeseer'
+    net_name = 'Cora'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
     data = dataset[0]
     features = data.x
@@ -39,9 +40,22 @@ if __name__ == "__main__":
     # new_edge_index = eliminate_interclass_edges(edge_index, labels)
     # data.edge_index = new_edge_index
     # draw_graph(data)
+    acc_list = []
+    for th in range(11):
+        accs = []
+        data.edge_index = edge_index
+        comb_edge_index, edge_weight = make_adj_sim_conbined_graph(data, dataset.name, th/10, 0.4)
+        data.edge_index = comb_edge_index
+        for _ in range(10):
+            acc_test, output = run_gcn(data, edge_weight=edge_weight, verbose=False)
+            accs.append(acc_test)
+        acc_list.append(np.mean(accs))
 
-    for _ in range(10):
-        _, output = run_gcn(data, verbose=False)
+    print(acc_list)
+
+    for i in range(10):
+        pass
+        # _, output = run_gcn(data, verbose=False)
         # _, output = run_gat(data, verbose=False)
         # draw_classification_result(data, output)
         # check_neighbor_class(data, output)

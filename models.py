@@ -88,11 +88,11 @@ class GCN(nn.Module):
         self.gc1 = GCNConv(nfeat, nhid)
         self.gc2 = GCNConv(nhid, nclass)
 
-    def forward(self, x, edge_index):
-        x = self.gc1(x, edge_index)
+    def forward(self, x, edge_index, edge_weight):
+        x = self.gc1(x, edge_index, edge_weight)
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
-        x = self.gc2(x, edge_index)
+        x = self.gc2(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
 
 
@@ -115,7 +115,7 @@ class GCN3layer(nn.Module):
 
 
 def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
-            early_stopping=True, patience=10, verbose=True):
+            early_stopping=True, patience=10, verbose=True, edge_weight=None):
     edge_index = data.edge_index
     features = data.x
     train_mask, val_mask, test_mask = get_masks(data, train_mask, val_mask, test_mask)
@@ -128,7 +128,7 @@ def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
     min_val_loss = 100000
     for epoch in range(200):
         optimizer.zero_grad()
-        output = model(features, edge_index)
+        output = model(features, edge_index, edge_weight=edge_weight)
         train_loss = F.nll_loss(output[train_mask == 1], trainY)
         val_loss = F.nll_loss(output[val_mask == 1], valY)
         val_acc = accuracy(output[val_mask == 1], valY)
@@ -146,10 +146,10 @@ def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
         loss.backward()
         optimizer.step()
     model.eval()
-    output = model(features, edge_index)
+    output = model(features, edge_index, edge_weight=edge_weight)
     acc_train = accuracy(output[train_mask == 1], trainY)
     print("train accuracy :", acc_train)
-    output = model(features, edge_index)
+    output = model(features, edge_index, edge_weight=edge_weight)
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
     return acc_test, output
