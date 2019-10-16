@@ -1,6 +1,9 @@
 import networkx as nx
+import os
+import pickle
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from edge_centrality import load_centrality
 from node_similarity import load_similarity
@@ -138,3 +141,46 @@ def convert_feature_to_tensor(features, edge_index):
     f2 = torch.reshape(f2, (-1, 1, 1, f2.size(1)))
     feat_ts = torch.cat((f1, f2), dim=2)
     return feat_ts
+
+
+def init_cosine_similarity(data, file_path):
+    print("create a cosine similarity matrix")
+    x = data.x
+    nnode = x.size(0)
+    sim_mat = torch.cat([F.cosine_similarity(x, x[i, :].view(1, -1)).view(-1, 1) for i in range(nnode)], dim=1)
+    with open(file_path, 'wb') as f:
+        file_dir = os.path.dirname(file_path)
+        os.makedirs(file_dir, exist_ok=True)
+        pickle.dump(sim_mat, f)
+
+
+def load_cosine_similarity(data, name):
+    file_dir = os.path.dirname(os.path.abspath(__file__)) + '/nodepairsim/'
+    data_name = name
+    file_path = file_dir + data_name + '.pkl'
+
+    if not os.path.exists(file_path):
+        init_cosine_similarity(data, file_path)
+
+    with open(file_path, 'rb') as f:
+        sim_mat = pickle.load(f)
+        print("finish loading the pkl file")
+    return sim_mat
+
+
+def make_similarity_graph(data, name, threshold):
+    sim_mat = load_cosine_similarity(data, name)
+    # sim_mat[i][i] = 0 for i in all nodes
+    sim_mat = sim_mat - torch.diag(sim_mat.diag())
+    sim_mat[sim_mat < threshold] = 0
+    sp_sim = sim_mat.to_sparse()
+    return sp_sim
+
+
+def make_adj_sim_conbined_graph(data, name, alpha, threshold):
+    adj_list = data.edge_index
+    adj_list_weight = torch.ones(adj_list.size(1))
+    sp_adj = torch.sparse_coo_tensor(adj_list, adj_list_weight)
+    sp_sim = make_similarity_graph(data, name, threshold)
+    combined_graph = alpha * sp_adj + (1-alpha) * sp_sim
+    return combined_graph.coalesce().indices(), combined_graph.coalesce().values()
