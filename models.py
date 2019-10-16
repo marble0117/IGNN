@@ -23,7 +23,7 @@ class GAT(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def runGAT(data, train_mask=None, val_mask=None, test_mask=None,
+def run_gat(data, train_mask=None, val_mask=None, test_mask=None,
            early_stopping=True, patience=100, verbose=True):
     edge_index = data.edge_index
     features = data.x
@@ -106,7 +106,7 @@ class GCN3layer(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def runGCN(data, train_mask=None, val_mask=None, test_mask=None,
+def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
            early_stopping=True, patience=10, verbose=True):
     edge_index = data.edge_index
     features = data.x

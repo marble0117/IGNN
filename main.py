@@ -41,8 +41,8 @@ if __name__ == "__main__":
     # draw_graph(data)
 
     for _ in range(10):
-        _, output = runGCN(data, verbose=False)
-        # _, output = runGAT(data, verbose=False)
+        _, output = run_gcn(data, verbose=False)
+        # _, output = run_gat(data, verbose=False)
         # draw_classification_result(data, output)
         # check_neighbor_class(data, output)
         # check_misclassified_class(data, output)
