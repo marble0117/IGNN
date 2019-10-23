@@ -31,7 +31,8 @@ class GAT(nn.Module):
         self.gc1 = GATConv(nfeat, nhid, heads=heads, dropout=0.6)
         self.gc2 = GATConv(nhid*heads, nclass, dropout=0.6)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = F.dropout(x, p=0.6, training=self.training)
         x = self.gc1(x, edge_index)
         x = F.elu(x)
@@ -88,11 +89,12 @@ class GCN(nn.Module):
         self.gc1 = GCNConv(nfeat, nhid)
         self.gc2 = GCNConv(nhid, nclass)
 
-    def forward(self, x, edge_index, edge_weight):
-        x = self.gc1(x, edge_index, edge_weight)
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        x = self.gc1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
-        x = self.gc2(x, edge_index, edge_weight)
+        x = self.gc2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
 
@@ -103,7 +105,8 @@ class GCN3layer(nn.Module):
         self.gc2 = GCNConv(nhid, nhid)
         self.gc3 = GCNConv(nhid, nclass)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = self.gc1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
