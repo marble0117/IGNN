@@ -156,3 +156,31 @@ def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
     acc_test = accuracy(output[test_mask == 1], testY)
     print("test  accuracy :", acc_test)
     return acc_test, output
+
+
+def train(model, optimizer, data):
+    model.train()
+    optimizer.zero_grad()
+    output = model(data)
+    loss = F.nll_loss(output[data.train_mask == 1], data.y[data.train_mask == 1])
+    loss.backward()
+    optimizer.step()
+
+
+def evaluate(model, data):
+    model.eval()
+
+    with torch.no_grad():
+        logits = model(data)
+
+    outputs = {}
+    for key in ['train', 'val', 'test']:
+        mask = data['{}_mask'.format(key)]
+        loss = F.nll_loss(logits[mask == 1], data.y[mask == 1]).item()
+        pred = logits[mask].max(1)[1]
+        acc = pred.eq(data.y[mask]).sum().item() / mask.sum().item()
+
+        outputs['{}_loss'.format(key)] = loss
+        outputs['{}_acc'.format(key)] = acc
+
+    return outputs
