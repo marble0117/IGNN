@@ -40,23 +40,17 @@ if __name__ == "__main__":
     # new_edge_index = eliminate_interclass_edges(edge_index, labels)
     # data.edge_index = new_edge_index
     # draw_graph(data)
-    acc_list = []
-    for th in range(11):
-        accs = []
-        data.edge_index = edge_index
-        comb_edge_index, edge_weight = make_adj_sim_conbined_graph(data, dataset.name, th/10, 0.4)
-        data.edge_index = comb_edge_index
-        for _ in range(10):
-            acc_test, output = run_gcn(data, edge_weight=edge_weight, verbose=False)
-            accs.append(acc_test)
-        acc_list.append(np.mean(accs))
-
-    print(acc_list)
+    # comb_edge_index, edge_weight = make_adj_sim_conbined_graph(data, dataset.name, th/10, 0.4)
+    # clique_cadidate = torch.combinations(train_mask.nonzero().T[0]).T
+    # c_source, c_target = clique_cadidate
+    # clique_flag = (labels[c_source] == labels[c_target])
+    # cliques = clique_cadidate.T[clique_flag].T
+    # new_edge_index = torch.cat([edge_index, cliques], dim=1)
+    # data.edge_index = new_edge_index
 
     for i in range(10):
-        pass
-        # _, output = run_gcn(data, verbose=False)
-        # _, output = run_gat(data, verbose=False)
+        run_gcn(data, verbose=False, early_stopping=True)
+        # run_gat(data, verbose=False)
         # draw_classification_result(data, output)
         # check_neighbor_class(data, output)
         # check_misclassified_class(data, output)
