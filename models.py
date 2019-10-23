@@ -89,6 +89,10 @@ class GCN(nn.Module):
         self.gc1 = GCNConv(nfeat, nhid)
         self.gc2 = GCNConv(nhid, nclass)
 
+    def reset_parameters(self):
+        self.gc1.reset_parameters()
+        self.gc2.reset_parameters()
+
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
         x = self.gc1(x, edge_index)
@@ -119,43 +123,30 @@ class GCN3layer(nn.Module):
 
 def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
             early_stopping=True, patience=10, verbose=True, edge_weight=None):
-    edge_index = data.edge_index
-    features = data.x
-    train_mask, val_mask, test_mask = get_masks(data, train_mask, val_mask, test_mask)
-    trainY, valY, testY = get_labels(data, train_mask, val_mask, test_mask)
 
-    model = GCN(features.size()[1], 16, int(torch.max(data.y)) + 1)
+    model = GCN(data.x.size()[1], 16, int(torch.max(data.y)) + 1)
     # model = GCN3layer(features.size()[1], 16, int(torch.max(labels)) + 1)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
-    model.train()
-    min_val_loss = 100000
+    val_loss_history = []
+    best_val_loss = float('inf')
     for epoch in range(200):
-        optimizer.zero_grad()
-        output = model(features, edge_index, edge_weight=edge_weight)
-        train_loss = F.nll_loss(output[train_mask == 1], trainY)
-        val_loss = F.nll_loss(output[val_mask == 1], valY)
-        val_acc = accuracy(output[val_mask == 1], valY)
+        train(model, optimizer, data)
+        eval_info = evaluate(model, data)
+        if eval_info['val_loss'] < best_val_loss:
+            best_val_loss = eval_info['val_loss']
+            test_acc = eval_info['test_acc']
+
+        val_loss_history.append(eval_info['val_loss'])
         if early_stopping:
-            if min_val_loss >= val_loss:
-                count = 0
-                min_val_loss = val_loss
-            else:
-                count += 1
-            if count == patience:
+            tmp = torch.tensor(val_loss_history[-(patience + 1):-1])
+            if eval_info['val_loss'] > tmp.mean().item():
                 break
         if verbose:
-            print("epoch:", epoch + 1, "training loss:", train_loss.item(), "val loss:", val_loss.item(), "val acc :", val_acc)
-        loss = train_loss
-        loss.backward()
-        optimizer.step()
-    model.eval()
-    output = model(features, edge_index, edge_weight=edge_weight)
-    acc_train = accuracy(output[train_mask == 1], trainY)
-    print("train accuracy :", acc_train)
-    output = model(features, edge_index, edge_weight=edge_weight)
-    acc_test = accuracy(output[test_mask == 1], testY)
-    print("test  accuracy :", acc_test)
-    return acc_test, output
+            print("epoch:", epoch + 1, "training loss:", eval_info['train_loss'], "val loss:", eval_info['val_loss'], "val acc :", eval_info['val_acc'])
+    eval_info = evaluate(model, data)
+    print("train accuracy :", eval_info['train_acc'])
+    print("test  accuracy :", eval_info['test_acc'])
+    return eval_info
 
 
 def train(model, optimizer, data):
@@ -177,8 +168,8 @@ def evaluate(model, data):
     for key in ['train', 'val', 'test']:
         mask = data['{}_mask'.format(key)]
         loss = F.nll_loss(logits[mask == 1], data.y[mask == 1]).item()
-        pred = logits[mask].max(1)[1]
-        acc = pred.eq(data.y[mask]).sum().item() / mask.sum().item()
+        pred = logits[mask == 1].max(1)[1]
+        acc = pred.eq(data.y[mask == 1]).sum().item() / mask.sum().item()
 
         outputs['{}_loss'.format(key)] = loss
         outputs['{}_acc'.format(key)] = acc
