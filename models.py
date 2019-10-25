@@ -45,22 +45,23 @@ def run_gat(data, train_mask=None, val_mask=None, test_mask=None,
             early_stopping=True, patience=100, verbose=True):
     model = GAT(data.x.size()[1], 8, int(torch.max(data.y)) + 1, heads=8)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=5e-4)
-    val_loss_history = []
+    counter = 0
     best_val_loss = float('inf')
     for epoch in range(200):
         train(model, optimizer, data)
         eval_info = evaluate(model, data)
-        if eval_info['val_loss'] < best_val_loss:
-            best_val_loss = eval_info['val_loss']
-            test_acc = eval_info['test_acc']
-
-        val_loss_history.append(eval_info['val_loss'])
-        if early_stopping and epoch > 200 // 2:
-            tmp = torch.tensor(val_loss_history[-(patience + 1):-1])
-            if eval_info['val_loss'] > tmp.mean().item():
-                break
         if verbose:
             print("epoch:", epoch + 1, "training loss:", eval_info['train_loss'], "val loss:", eval_info['val_loss'], "val acc :", eval_info['val_acc'])
+
+        if early_stopping:
+            if eval_info['val_loss'] < best_val_loss:
+                best_val_loss = eval_info['val_loss']
+                counter = 0
+            else:
+                counter += 1
+            if counter >= patience:
+                print("Stop training")
+                break
     eval_info = evaluate(model, data)
     print("train accuracy :", eval_info['train_acc'])
     print("test  accuracy :", eval_info['test_acc'])
@@ -107,22 +108,23 @@ def run_gcn(data, train_mask=None, val_mask=None, test_mask=None,
     model = GCN(data.x.size()[1], 16, int(torch.max(data.y)) + 1)
     # model = GCN3layer(features.size()[1], 16, int(torch.max(labels)) + 1)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
-    val_loss_history = []
+    counter = 0
     best_val_loss = float('inf')
     for epoch in range(200):
         train(model, optimizer, data)
         eval_info = evaluate(model, data)
-        if eval_info['val_loss'] < best_val_loss:
-            best_val_loss = eval_info['val_loss']
-            test_acc = eval_info['test_acc']
-
-        val_loss_history.append(eval_info['val_loss'])
-        if early_stopping:
-            tmp = torch.tensor(val_loss_history[-(patience + 1):-1])
-            if eval_info['val_loss'] > tmp.mean().item():
-                break
         if verbose:
             print("epoch:", epoch + 1, "training loss:", eval_info['train_loss'], "val loss:", eval_info['val_loss'], "val acc :", eval_info['val_acc'])
+
+        if early_stopping:
+            if eval_info['val_loss'] < best_val_loss:
+                best_val_loss = eval_info['val_loss']
+                counter = 0
+            else:
+                counter += 1
+            if counter >= patience:
+                print("Stop training")
+                break
     eval_info = evaluate(model, data)
     print("train accuracy :", eval_info['train_acc'])
     print("test  accuracy :", eval_info['test_acc'])
