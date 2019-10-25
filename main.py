@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import torch
+import torch_geometric.transforms as T
 from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import add_self_loops
 
@@ -21,6 +22,7 @@ from analyzer.node_analysis import *
 if __name__ == "__main__":
     net_name = 'Cora'
     dataset = Planetoid(root='/tmp/' + net_name, name=net_name)
+    dataset.transform = T.NormalizeFeatures()
     data = dataset[0]
     features = data.x
     labels = data.y
@@ -49,8 +51,8 @@ if __name__ == "__main__":
     # data.edge_index = new_edge_index
 
     for i in range(10):
-        run_gcn(data, verbose=False, early_stopping=True)
-        # run_gat(data, verbose=False)
+        # run_gcn(data, verbose=False, early_stopping=True)
+        run_gat(data, verbose=False)
         # draw_classification_result(data, output)
         # check_neighbor_class(data, output)
         # check_misclassified_class(data, output)
